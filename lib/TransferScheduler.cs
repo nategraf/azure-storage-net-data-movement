@@ -192,7 +192,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
             switch (job.Transfer.TransferMethod)
             {
                 case TransferMethod.SyncCopy:
-                    controller = new SyncTransferController(this, job, cancellationToken);
+                    controller = new SlimSyncTransferController(this, job, cancellationToken);
                     break;
 
                 case TransferMethod.AsyncCopy:

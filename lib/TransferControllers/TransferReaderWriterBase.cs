@@ -15,7 +15,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
     {
         protected TransferReaderWriterBase(
             TransferScheduler scheduler,
-            SyncTransferController controller,
+            ISyncTransferController controller,
             CancellationToken cancellationToken)
         {
             this.Scheduler = scheduler;
@@ -50,7 +50,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             private set;
         }
 
-        protected SyncTransferController Controller
+        protected ISyncTransferController Controller
         {
             get;
             private set;

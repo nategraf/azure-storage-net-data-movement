@@ -13,7 +13,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage.Blob;
 
-    internal class SyncTransferController : TransferControllerBase
+    internal class SyncTransferController : TransferControllerBase, ISyncTransferController
     {
         private readonly TransferReaderWriterBase reader;
         private readonly TransferReaderWriterBase writer;
