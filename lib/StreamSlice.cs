@@ -17,7 +17,6 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         public Stream Source { get; private set; }
         public long Offset { get; private set; }
 
-        // Mabye I shouldn't be faffing about with Tasks here....
         private List<Task> tasks = new List<Task>();
 
         public StreamSlice(Stream stream, long offset)
@@ -28,16 +27,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            Monitor.Enter(Source);
-            try {
-                Source.Position = this.Offset + this.Position;
-                Source.Write(buffer, offset, count);
-            }
-            finally {
-                Monitor.Exit(Source);
-            }
-
-            /*if (Monitor.TryEnter(Source)) {
+            if(Monitor.TryEnter(Source)) {
                 try {
                     Source.Position = this.Offset + this.Position;
                     Source.Write(buffer, offset, count);
@@ -47,12 +37,12 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
                 }
             }
             else {
-                // Once we return the buffer is owned by the caller again. We need a copy
                 var copy = new byte[count];
                 Array.Copy(buffer, offset, copy, 0, count);
 
                 tasks.Add(DeferedWrite(copy, 0, count, this.Position));
-            }*/
+            }
+
             this.Position += count;
         }
 
@@ -85,6 +75,12 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         public override void Flush() {
             Task.WhenAll(tasks).Wait();
             tasks = new List<Task>();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing){ }
+            base.Dispose(disposing);
         }
 
         public override void SetLength(long len) { }
