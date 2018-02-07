@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,54 +10,59 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
     internal class StreamSlice : Stream
     {
         public override bool CanRead { get => Source.CanRead; }
-        public override bool CanSeek { get => Source.CanSeek; }
+        public override bool CanSeek { get => false; }
         public override bool CanTimeout { get => Source.CanTimeout; }
         public override bool CanWrite { get => Source.CanWrite; }
-        public override long Position { get; set; }
+        public override long Position { get => this.position; set { throw new NotSupportedException(); } }
 
         public Stream Source { get; private set; }
         public long Offset { get; private set; }
 
-        private List<Task> tasks = new List<Task>();
+        private long position;
+        private MemoryStream uncommited;
+        private long commitedPosition;
 
         public StreamSlice(Stream stream, long offset)
         {
             Source = stream;
             Offset = offset;
+            uncommited = new MemoryStream(32 * 1024);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if(Monitor.TryEnter(Source)) {
+            if (Monitor.TryEnter(Source)) {
                 try {
-                    Source.Position = this.Offset + this.Position;
+                    Commit();
+                    Source.Position = Offset + position;
                     Source.Write(buffer, offset, count);
                 }
                 finally {
                     Monitor.Exit(Source);
                 }
+
+                position += count;
+                commitedPosition = position;
             }
             else {
-                var copy = new byte[count];
-                Array.Copy(buffer, offset, copy, 0, count);
-
-                tasks.Add(DeferedWrite(copy, 0, count, this.Position));
+                uncommited.Write(buffer, offset, count);
+                position += count;
             }
 
-            this.Position += count;
         }
 
-        private async Task DeferedWrite(byte[] buffer, int offset, int count, long position) {
-            await Task.Run(() => {
-                Monitor.Enter(Source);
-                try {
-                    Source.Position = this.Offset + position;
-                    Source.Write(buffer, offset, count);
-                }
-                finally {
-                    Monitor.Exit(Source);
-                }
-            });
+        private void Commit()
+        {
+            if (uncommited.Length > 0) {
+                uncommited.Position = 0;
+                Source.Position = Offset + commitedPosition;
+                uncommited.CopyTo(Source);
+
+                Debug.Assert(commitedPosition + uncommited.Length == position);
+                commitedPosition = position;
+                uncommited.Position = 0;
+                uncommited.SetLength(0);
+            }
         }
 
         public override int Read(byte[] buffer, int offset, int count) {
@@ -64,7 +70,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
 
             Monitor.Enter(Source);
             try {
-                Source.Position = this.Offset + this.Position;
+                Source.Position = Offset + Position;
                 return Source.Read(buffer, offset, count);
             }
             finally {
@@ -73,13 +79,20 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         }
 
         public override void Flush() {
-            Task.WhenAll(tasks).Wait();
-            tasks = new List<Task>();
+            Monitor.Enter(Source);
+            try {
+                Commit();
+            }
+            finally {
+                Monitor.Exit(Source);
+            }
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing){ }
+            if (disposing) {
+                uncommited.Dispose();
+            }
             base.Dispose(disposing);
         }
 
