@@ -19,7 +19,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
     /// TransferScheduler class, used for  transferring Microsoft Azure
     /// Storage objects.
     /// </summary>
-    internal sealed class TransferScheduler : IDisposable
+    public sealed class TransferScheduler : IDisposable
     {
         /// <summary>
         /// Main collection of transfer controllers.
@@ -161,7 +161,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         /// </summary>
         /// <param name="job">Transfer job to be executed.</param>
         /// <param name="cancellationToken">Token used to notify the job that it should stop.</param>
-        public Task ExecuteJobAsync(
+        internal Task ExecuteJobAsync(
             TransferJob job,
             CancellationToken cancellationToken)
         {
@@ -192,7 +192,12 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
             switch (job.Transfer.TransferMethod)
             {
                 case TransferMethod.SyncCopy:
-                    controller = new SlimSyncTransferController(this, job, cancellationToken);
+                    if (Constants.UseSlimWriter) {
+                        controller = new SlimSyncTransferController(this, job, cancellationToken);
+                    }
+                    else {
+                        controller = new SyncTransferController(this, job, cancellationToken);
+                    }
                     break;
 
                 case TransferMethod.AsyncCopy:
