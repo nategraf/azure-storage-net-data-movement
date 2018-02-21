@@ -44,7 +44,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
 
         public StreamedWriter(
             TransferScheduler scheduler, 
-            SyncTransferController controller, 
+            ISyncTransferController controller, 
             CancellationToken cancellationToken)
             : base(scheduler, controller, cancellationToken)
         {

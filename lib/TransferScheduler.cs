@@ -192,11 +192,16 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
             switch (job.Transfer.TransferMethod)
             {
                 case TransferMethod.SyncCopy:
-                    if (Constants.UseSlimWriter) {
-                        controller = new SlimSyncTransferController(this, job, cancellationToken);
-                    }
-                    else {
-                        controller = new SyncTransferController(this, job, cancellationToken);
+                    switch (Constants.Controller) {
+                        case Constants.ControllerEnum.Slim:
+                            controller = new SlimSyncTransferController(this, job, cancellationToken);
+                            break;
+                        case Constants.ControllerEnum.Pipelined:
+                            controller = new PipelinedSyncTransferController(this, job, cancellationToken);
+                            break;
+                        case Constants.ControllerEnum.Origonal:
+                            controller = new SyncTransferController(this, job, cancellationToken);
+                            break;
                     }
                     break;
 

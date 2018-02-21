@@ -49,7 +49,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             this.SharedTransferData.OnTotalLengthChanged += (sender, args) =>
             {
                 // For normal directions, we'll use default block size 4MB for transfer.
-                this.SharedTransferData.BlockSize = Constants.SlimDefaultBlockSize;
+                this.SharedTransferData.BlockSize = Constants.SlimBlockSize;
             };
         }
 

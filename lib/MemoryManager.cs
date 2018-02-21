@@ -11,10 +11,18 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
     using System.Collections.Generic;
     using System.Linq;
 
+    internal interface IMemoryManager {
+        byte[] RequireBuffer();
+        byte[][] RequireBuffers(int count);
+
+        void ReleaseBuffer(byte[] buffer);
+        void ReleaseBuffers(byte[][] buffers);
+    }
+
     /// <summary>
     /// Class for maintaining a pool of memory buffer objects.
     /// </summary>
-    internal class MemoryManager
+    internal class MemoryManager : IMemoryManager
     {
         private MemoryPool memoryPool;
 

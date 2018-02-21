@@ -15,8 +15,10 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
     public static class Constants
     {
         /// TEMPORARY: Useful while working on prototype writer
-        public static bool UseSlimWriter = true;
-        public static int SlimDefaultBlockSize = 100 * 1024 * 1024;
+        public enum ControllerEnum { Origonal, Slim, Pipelined };
+        public static ControllerEnum Controller = ControllerEnum.Origonal;
+        public static int SlimBlockSize = 100 * 1024 * 1024;
+        public static int PipelinedBlockSize = 100 * 1024 * 1024;
 
         /// <summary>
         /// Stores the max block size, 100MB.
