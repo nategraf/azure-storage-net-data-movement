@@ -106,12 +106,13 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         /// </summary>
         internal const long FileRangeSpanSize = 148 * 1024 * 1024;
         /// <summary>
-        /// Percentage of available we'll try to use for our memory cache.
+        /// Percentage of available memory we'll try to use for our memory cache.
         /// </summary>
         internal const double MemoryCacheMultiplier = 0.5;
 
         /// <summary>
-        /// Maximum amount of memory to use for our memory cache.
+        /// Maximum amount of memory to use for our memory cache
+        /// if availible physical memory cannot be queried
         /// </summary>
         internal static readonly long MemoryCacheMaximum = GetMemoryCacheMaximum();
 

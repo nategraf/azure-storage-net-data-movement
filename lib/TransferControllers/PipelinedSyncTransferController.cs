@@ -98,15 +98,25 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             }
         }
 
+        public override bool HasWriterWork
+        {
+            get
+            {
+                var hasWork = this.reader.PreProcessed && this.writer.HasWork;
+
+                return !this.ErrorOccurred && hasWork;
+            }
+        }
+
         protected override async Task<bool> DoWorkInternalAsync()
         {
-            if (!this.reader.PreProcessed && this.reader.HasWork)
-            {
-                await this.reader.DoWorkInternalAsync();
-            }
-            else if (this.reader.PreProcessed && this.writer.HasWork)
+            if (this.reader.PreProcessed && this.writer.HasWork)
             {
                 await this.writer.DoWorkInternalAsync();
+            }
+            else if (!this.reader.PreProcessed && this.reader.HasWork)
+            {
+                await this.reader.DoWorkInternalAsync();
             }
             else if (this.writer.PreProcessed && this.reader.HasWork)
             {

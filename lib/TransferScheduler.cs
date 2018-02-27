@@ -417,16 +417,42 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
                 new List<KeyValuePair<ITransferController, object>>(
                     activeItems.Where(item => item.Key.HasWork && !item.Key.IsFinished));
 
+            // Filter items with writer work only.
+            List<KeyValuePair<ITransferController, object>> activeItemsWithWriterWork =
+                new List<KeyValuePair<ITransferController, object>>(
+                    activeItems.Where(item => item.Key.HasWriterWork && !item.Key.IsFinished));
+
             if (0 != activeItemsWithWork.Count)
             {
                 // Select random item and get work delegate.
                 int idx = this.randomGenerator.Next(activeItemsWithWork.Count);
                 ITransferController transferController = activeItemsWithWork[idx].Key;
 
-                if (Interlocked.Increment(ref this.ongoingTasks) <= TransferManager.Configurations.ParallelOperations)
+                var ongoingTasks = Interlocked.Increment(ref this.ongoingTasks);
+                if (ongoingTasks <= TransferManager.Configurations.ParallelOperations * (1 - TransferManager.Configurations.ReservedWriterRatio))
                 {
                     DoControllerWork(transferController);
                     return true;
+                }
+                else if (ongoingTasks <= TransferManager.Configurations.ParallelOperations) {
+                    if (transferController.HasWriterWork)
+                    {
+                        DoControllerWork(transferController);
+                        return true;
+                    }
+                    else if (activeItemsWithWriterWork.Count > 0)
+                    {
+                        idx = this.randomGenerator.Next(activeItemsWithWriterWork.Count);
+                        transferController = activeItemsWithWriterWork[idx].Key;
+
+                        DoControllerWork(transferController);
+                        return true;
+                    }
+                    else 
+                    {
+                        Interlocked.Decrement(ref this.ongoingTasks);
+                        return false;
+                    }
                 }
                 else
                 {

@@ -36,13 +36,15 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
 
         public override void Flush()
         {
-            this.callback(this.buffer, 0, this.offset);
-            this.length += this.offset;
-            this.offset = 0;
+            if (this.offset > 0) {
+                this.callback(this.buffer, 0, this.offset);
+                this.length += this.offset;
+                this.offset = 0;
 
-            // The callback receiver now owns the sent buffer
-            this.buffer = this.manager.RequireBuffer();
-            Debug.Assert(this.buffer != null); // TODO: Handle null return
+                // The callback receiver now owns the sent buffer
+                this.buffer = this.manager.RequireBuffer();
+                Debug.Assert(this.buffer != null); // TODO: Handle null return
+            }
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -76,14 +78,10 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
                 remaining -= n;
 
                 // If we have just filled our internal buffer, flush
-                // Otherwise there should be no more remaining data
                 availible = this.buffer.Length - this.offset;
                 if (availible == 0) {
                     this.Flush();
                     availible = this.buffer.Length;
-                }
-                else {
-                    Debug.Assert(remaining > 0);
                 }
             }
         }

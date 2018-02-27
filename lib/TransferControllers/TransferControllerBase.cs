@@ -109,6 +109,11 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             get;
         }
 
+        public virtual bool HasWriterWork
+        {
+            get => false;
+        }
+
         /// <summary>
         /// Gets a value indicating whether this controller is finished with
         /// its transferring task.

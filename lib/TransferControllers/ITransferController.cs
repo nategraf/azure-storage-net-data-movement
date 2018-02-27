@@ -15,6 +15,11 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             get;
         }
 
+        bool HasWriterWork
+        {
+            get;
+        }
+
         bool IsFinished
         {
             get;

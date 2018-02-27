@@ -79,6 +79,17 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         }
 
         /// <summary>
+        /// Gets or sets the portion of the total parallel count pool which is reserved
+        /// for threads which are writing data
+        /// This prevents all threads from being consumed by readers
+        /// </summary>
+        /// <value>What ratio of the total parallel count is reserved for writing</value>
+        public double ReservedWriterRatio 
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Gets or sets the BlockSize to use for Windows Azure Storage transfers to block blob(s). 
         /// It must be between 4MB and 100MB and be multiple of 4MB.
         /// 
