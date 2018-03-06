@@ -53,35 +53,24 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
                 // For large block blob uploading, we need to re-calculate the BlockSize according to the total size
                 // The formula: Ceiling(TotalSize / (50000 * DefaultBlockSize)) * DefaultBlockSize. This will make sure the 
                 // new block size will be mutiple of DefaultBlockSize(aka MemoryManager's chunk size)
-                if (this.writer is BlockBlobWriter)
+                var normalMaxBlockBlobSize = (long)50000 * Constants.DefaultBlockSize;
+
+                // Calculate the min block size according to the blob total length
+                var memoryChunksRequiredEachTime = (int)Math.Ceiling((double)this.SharedTransferData.TotalLength / normalMaxBlockBlobSize);
+                var blockSize = memoryChunksRequiredEachTime * TransferManager.Configurations.MemoryChunkSize;
+
+                if (TransferManager.Configurations.BlockSize > blockSize)
                 {
-                    var normalMaxBlockBlobSize = (long)50000 * Constants.DefaultBlockSize;
-
-                    // Calculate the min block size according to the blob total length
-                    var memoryChunksRequiredEachTime = (int)Math.Ceiling((double)this.SharedTransferData.TotalLength / normalMaxBlockBlobSize);
-                    var blockSize = memoryChunksRequiredEachTime * Constants.DefaultBlockSize;
-
-                    if (TransferManager.Configurations.BlockSize > blockSize)
-                    {
-                        // Take the block size user specified when it's greater than the calculated value
-                        blockSize = TransferManager.Configurations.BlockSize;
-                        memoryChunksRequiredEachTime = (int)Math.Ceiling((double)blockSize / Constants.DefaultBlockSize);
-                    }
-                    else
-                    {
-                        // Try to increase the memory pool size
-                        this.Scheduler.TransferOptions.UpdateMaximumCacheSize(blockSize);
-                    }
-
-                    this.SharedTransferData.BlockSize = blockSize;
-                    this.SharedTransferData.MemoryChunksRequiredEachTime = memoryChunksRequiredEachTime;
+                    // Take the block size user specified when it's greater than the calculated value
+                    blockSize = TransferManager.Configurations.BlockSize;
+                    memoryChunksRequiredEachTime = (int)Math.Ceiling((double)blockSize / TransferManager.Configurations.MemoryChunkSize);
                 }
-                else
-                {
-                    // For normal directions, we'll use default block size 4MB for transfer.
-                    this.SharedTransferData.BlockSize = Constants.DefaultBlockSize;
-                    this.SharedTransferData.MemoryChunksRequiredEachTime = 1;
-                }
+
+                // Try to increase the memory pool size
+                this.Scheduler.TransferOptions.UpdateMaximumCacheSize(blockSize);
+
+                this.SharedTransferData.BlockSize = blockSize;
+                this.SharedTransferData.MemoryChunksRequiredEachTime = memoryChunksRequiredEachTime;
             };
         }
 

@@ -314,30 +314,16 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement.TransferControllers
             }
             else
             {
-                var blockSize = Constants.DefaultBlockSize; // 4MB
-
-                var startOffset = asyncState.StartOffset;
-                var remainingLength = asyncState.Length;
-                var index = 0;
-
-                do
-                {
-                    var length = Math.Min(blockSize, remainingLength);
-
-                    var memoryStream = new MemoryStream(asyncState.MemoryBuffer[index], 0, length);
-                    await this.sourceBlob.DownloadRangeToStreamAsync(
-                                memoryStream,
-                                startOffset,
-                                length,
-                                accessCondition,
-                                Utils.GenerateBlobRequestOptions(this.sourceLocation.BlobRequestOptions),
-                                Utils.GenerateOperationContext(this.Controller.TransferContext),
-                                this.CancellationToken);
-
-                    index++;
-                    startOffset += length;
-                    remainingLength -= length;
-                } while (remainingLength > 0);
+                asyncState.MemoryStream = new ChunkedMemoryStream(asyncState.MemoryBuffer, 0, asyncState.Length);
+                await this.sourceBlob.DownloadRangeToStreamAsync(
+                    asyncState.MemoryStream,
+                    asyncState.StartOffset,
+                    asyncState.Length,
+                    accessCondition,
+                    Utils.GenerateBlobRequestOptions(this.sourceLocation.BlobRequestOptions),
+                    Utils.GenerateOperationContext(this.Controller.TransferContext),
+                    this.CancellationToken
+                );
             }
             
             TransferData transferData = new TransferData(this.Scheduler.MemoryManager)

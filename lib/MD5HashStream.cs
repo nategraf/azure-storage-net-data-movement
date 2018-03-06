@@ -17,7 +17,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
     /// <summary>
     /// Class to make thread safe stream access and calculate MD5 hash.
     /// </summary>
-    internal class MD5HashStream : IDisposable
+    public class MD5HashStream : IDisposable
     {
         /// <summary>
         /// Stream  object.
@@ -144,7 +144,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         /// </summary>
         /// <param name="memoryManager">Reference to MemoryManager object to require buffer from.</param>
         /// <param name="checkCancellation">Action to check whether to cancel this calculation.</param>
-        public void CalculateMd5(MemoryManager memoryManager, Action checkCancellation)
+        internal void CalculateMd5(MemoryManager memoryManager, Action checkCancellation)
         {
             if (null == this.md5hash)
             {
@@ -391,7 +391,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
 
                 //TODO: Duplication of code
                 var currentChunk = 0;
-                var currentChunkOffset = 1;
+                var currentChunkOffset = 0;
 
                 // Seek to the correct chunk and offset
                 while (offset != 0 && currentChunk != buffers.Length)

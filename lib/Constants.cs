@@ -23,7 +23,7 @@ namespace Microsoft.WindowsAzure.Storage.DataMovement
         /// <summary>
         /// Stores the max block size, 100MB.
         /// </summary>
-        public const int MaxBlockSize = 100 * 1024 * 1024;
+        public const int MaxBlockSize = 256 * 1024 * 1024;
 
         /// <summary>
         /// Default block size, 4MB.
